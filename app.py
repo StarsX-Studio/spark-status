@@ -156,7 +156,7 @@ def init_database():
             initial_users = [
                 {
                     'username': '1',
-                    'password': os.getenv('ADMIN_PASSWORD_2', '')
+                    'password': os.getenv('ADMIN_PASSWORD_1', '')
                 },
                 {
                     'username': '2',
@@ -687,8 +687,8 @@ def reset_user_passwords():
     conn = get_db()
     try:
         users = [
-            ('xinrain', os.getenv('ADMIN_PASSWORD_XINRAIN', 'Lcp970920')),
-            ('xingxuan', os.getenv('ADMIN_PASSWORD_XINGXUAN', 'waigame_admin_xingxuanpassword'))
+            ('xinrain', os.getenv('ADMIN_PASSWORD_1', '')),
+            ('xingxuan', os.getenv('ADMIN_PASSWORD_2', ''))
         ]
         with conn.cursor() as cursor:
             for username, password in users:
