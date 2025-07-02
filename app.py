@@ -156,11 +156,11 @@ def init_database():
             initial_users = [
                 {
                     'username': '1',
-                    'password': os.getenv('ADMIN_PASSWORD_XINRAIN', 'Lcp970920')
+                    'password': os.getenv('ADMIN_PASSWORD_2', '')
                 },
                 {
                     'username': '2',
-                    'password': os.getenv('ADMIN_PASSWORD_XINGXUAN', 'waigame_admin_xingxuanpassword')
+                    'password': os.getenv('ADMIN_PASSWORD_2', '')
                 }
             ]
             
