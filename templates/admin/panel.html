@@ -1,0 +1,296 @@
+<!--
+  - Copyright (C) 2025 StarsX Studio
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+  {% extends "base.html" %}
+
+{% block title %}管理面板{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h4">
+            <i class="fa-solid fa-tachometer-alt me-2"></i>管理面板
+        </h2>
+        <div>
+            <span class="badge bg-danger me-2">今日错误: {{ daily_errors }}</span>
+            <span class="me-3">欢迎, {{ username }}</span>
+            <a href="{{ url_for('admin_logout') }}" class="btn btn-sm btn-outline-danger">
+                <i class="fa-solid fa-right-from-bracket me-1"></i>退出
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fa-solid fa-exclamation-circle me-2"></i>添加事件
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="eventForm" method="POST" action="{{ url_for('add_event') }}">
+                        <div class="mb-3">
+                            <label class="form-label">事件级别</label>
+                            <select class="form-select" name="level" required>
+                                <option value="critical">严重 (红色)</option>
+                                <option value="medium">中等 (黄色)</option>
+                                <option value="minor">轻微 (蓝色)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">事件描述</label>
+                            <textarea class="form-control" name="description" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-warning w-100">
+                            <i class="fa-solid fa-paper-plane me-2"></i>提交事件
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fa-solid fa-database me-2"></i>数据管理
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="cleanupForm" method="POST" action="{{ url_for('cleanup_data') }}" class="mb-3">
+                        <div class="input-group">
+                            <input type="number" class="form-control" name="days" value="30" min="1">
+                            <button class="btn btn-danger" type="submit">
+                                <i class="fa-solid fa-broom me-2"></i>清理旧数据
+                            </button>
+                        </div>
+                        <small class="text-dark">清理超过指定天数的状态记录</small>
+                    </form>
+                    
+                    <form id="refreshForm" method="POST" action="{{ url_for('force_refresh') }}">
+                        <button type="submit" class="btn btn-outline-danger w-100">
+                            <i class="fa-solid fa-rotate me-2"></i>强制刷新状态
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fa-solid fa-history me-2"></i>最近状态记录
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th>服务</th>
+                                    <th>状态</th>
+                                    <th>详情</th>
+                                    <th>时间</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in status_history %}
+                                <tr>
+                                    <td>{{ record.service }}</td>
+                                    <td>
+                                        {% if record.status %}
+                                            <span class="badge bg-success">在线</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">离线</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ record.details[:30] }}{% if record.details|length > 30 %}...{% endif %}</td>
+                                    <td>{{ record.timestamp.strftime('%m-%d %H:%M') }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4">暂无状态记录</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fa-solid fa-bell me-2"></i>最近事件
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush" id="eventsList">
+                        {% for event in recent_events %}
+                        <div class="list-group-item event-{{ event.level }}" data-event-id="{{ event.id }}">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">
+                                    <span class="badge bg-{% if event.level == 'critical' %}danger{% elif event.level == 'medium' %}warning{% else %}info{% endif %} me-2">
+                                        {{ event.level | upper }}
+                                    </span>
+                                    {{ event.description }}
+                                </h6>
+                                <div>
+                                    <small class="me-2">{{ event.created_at.strftime('%m-%d %H:%M') }}</small>
+                                    <button class="btn btn-sm btn-outline-danger delete-event-btn">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <small class="text-dark">由 {{ event.created_by }} 添加</small>
+                        </div>
+                        {% else %}
+                        <div class="list-group-item text-center py-4">
+                            暂无事件记录
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="alertContainer"></div>
+
+<script>
+function showAlert(message, type) {
+    const alertContainer = document.getElementById('alertContainer');
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert custom-alert alert-dismissible fade show alert-${type}`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    alertContainer.appendChild(alertDiv);
+    setTimeout(() => alertDiv.classList.add('show'), 10);
+    
+    setTimeout(() => {
+        alertDiv.classList.remove('show');
+        setTimeout(() => alertDiv.remove(), 300);
+    }, 5000);
+}
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('eventsList').addEventListener('click', function(e) {
+        const deleteBtn = e.target.closest('.delete-event-btn');
+        if (deleteBtn) {
+            const eventItem = deleteBtn.closest('[data-event-id]');
+            const eventId = eventItem.dataset.eventId;
+            
+            if (confirm('确定要删除这个事件吗？')) {
+                fetch(`/admin/delete_event/${eventId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('网络响应异常');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        eventItem.remove();
+                        showAlert('事件已删除', 'info');
+                        if (!document.querySelector('[data-event-id]')) {
+                            document.getElementById('eventsList').innerHTML = `
+                                <div class="list-group-item text-center py-4">
+                                    暂无事件记录
+                                </div>
+                            `;
+                        }
+                    } else {
+                        showAlert(data.message || '删除失败', 'error');
+                    }
+                })
+                .catch(error => {
+                    showAlert('删除失败: ' + error.message, 'error');
+                });
+            }
+        }
+    });
+    const handleFormSubmit = (form, successMsg) => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('网络响应异常');
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    showAlert(successMsg || data.message, 'info');
+                    form.reset();
+                } else {
+                    showAlert(data.message || '操作失败', 'error');
+                }
+            })
+            .catch(error => {
+                showAlert('请求失败: ' + error.message, 'error');
+            });
+        });
+    };
+    handleFormSubmit(document.getElementById('eventForm'), '事件添加成功');
+    handleFormSubmit(document.getElementById('cleanupForm'), '数据清理完成');
+    handleFormSubmit(document.getElementById('refreshForm'), '状态已刷新');
+});
+</script>
+
+<style>
+.custom-alert {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    min-width: 300px;
+    max-width: 600px;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+.custom-alert.show {
+    opacity: 1;
+}
+.alert-error {
+    background-color: #f8d7da;
+    border-color: #f5c2c7;
+    color: #842029;
+}
+.alert-warn {
+    background-color: #fff3cd;
+    border-color: #ffecb5;
+    color: #664d03;
+}
+.alert-info {
+    background-color: #d1e7dd;
+    border-color: #badbcc;
+    color: #0f5132;
+}
+</style>
+{% endblock %}

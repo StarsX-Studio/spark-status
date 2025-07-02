@@ -1,0 +1,299 @@
+/*
+ * Copyright (C) 2025 StarsX Studio
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ */
+:root {
+  --primary-blue: #1a73e8;
+  --primary-purple: #8a2be2;
+  --light-bg: #f8f9fa;
+  --lighter-bg: #ffffff;
+  --card-bg: rgba(255, 255, 255, 0.9);
+  --text-dark: #212529;
+  --text-muted: #212529;
+  --chart-green: #28a745; /* 新增图表绿色 */
+  --link-hover: #00CED1; /* 新增链接悬停青蓝色 */
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background-color: var(--light-bg);
+  color: var(--text-dark);
+  line-height: 1.6;
+  overflow-x: hidden;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-image: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+}
+
+a {
+  color: var(--text-dark) !important;
+  text-decoration: none !important;
+  transition: all 0.2s ease !important;
+}
+
+a:hover,
+a:focus {
+  color: var(--link-hover) !important;
+  text-decoration: underline !important;
+  opacity: 1 !important;
+}
+
+/* 卡片效果 */
+.glass-effect {
+  background: var(--card-bg);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.navbar {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* 文字效果 */
+.neon-text {
+  color: var(--primary-blue);
+  text-shadow: none;
+  animation: none;
+}
+
+.neon-purple {
+  color: var(--primary-purple);
+  text-shadow: none;
+}
+
+.neon-hover:hover {
+  color: var(--primary-blue);
+  text-shadow: none;
+}
+
+/* 卡片设计 */
+.card {
+  background: var(--card-bg);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  transform-style: preserve-3d;
+  transform: perspective(1000px) translateY(0) rotateX(0);
+  overflow: hidden;
+}
+
+.card:hover {
+  transform: perspective(1000px) translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary-blue);
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-blue), var(--primary-purple));
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.card:hover::before {
+  opacity: 1;
+}
+
+/* 按钮样式 */
+.btn-primary {
+  background-color: var(--primary-blue);
+  color: white;
+  border: none;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background-color: #0d5bba;
+  color: white;
+  border: 1px solid #0d5bba;
+  transform: translateY(-2px);
+}
+
+.btn-outline-primary {
+  border: 1px solid var(--primary-blue);
+  color: var(--primary-blue);
+  background: transparent;
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--primary-blue);
+  color: white;
+}
+
+/* 页脚 */
+.footer {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  margin-top: auto;
+}
+
+/* 状态标签 */
+.status-online {
+  background: rgba(40, 167, 69, 0.15);
+  color: #28a745;
+  border: 1px solid rgba(40, 167, 69, 0.3);
+}
+
+.status-offline {
+  background: rgba(220, 53, 69, 0.15);
+  color: #dc3545;
+  border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+.status-warning {
+  background: rgba(255, 193, 7, 0.15);
+  color: #ffc107;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+/* 事件标签 */
+.badge-critical {
+  background: rgba(220, 53, 69, 0.15);
+  color: #dc3545;
+  border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+.badge-medium {
+  background: rgba(255, 193, 7, 0.15);
+  color: #ffc107;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.badge-minor {
+  background: rgba(23, 162, 184, 0.15);
+  color: #17a2b8;
+  border: 1px solid rgba(23, 162, 184, 0.3);
+}
+
+/* 30天状态图表样式 */
+.day-bar {
+  width: 100%;
+  background: var(--chart-green); /* 纯绿色 */
+  border-radius: 4px 4px 0 0;
+  transition: height 0.5s ease;
+  position: relative;
+}
+
+.day-bar:hover {
+  opacity: 0.9;
+  transform: scale(1.05);
+}
+
+.day-label {
+  margin-top: 8px;
+  font-size: 0.7rem;
+  color: var(--text-dark); /* 黑色文字 */
+}
+
+.day-percent {
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 2px 6px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  color: var(--text-dark); /* 黑色文字 */
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.day-bar:hover .day-percent {
+  opacity: 1;
+}
+
+/* 加载动画 */
+#loading-spinner {
+  display: inline-block;
+  width: 1.5rem;
+  height: 1.5rem;
+  vertical-align: text-bottom;
+  border: 0.25em solid var(--primary-blue);
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spinner-border .75s linear infinite;
+}
+
+@keyframes spinner-border {
+  to { transform: rotate(360deg); }
+}
+
+/* 警告框 */
+.custom-alert {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    min-width: 300px;
+    max-width: 600px;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+}
+    
+.custom-alert.show {
+    opacity: 1;
+}
+
+.alert-error {
+    background-color: #f8d7da;
+    border-color: #f5c2c7;
+    color: #842029;
+}
+    
+.alert-warn {
+    background-color: #fff3cd;
+    border-color: #ffecb5;
+    color: #664d03;
+}
+    
+.alert-info {
+    background-color: #d1e7dd;
+    border-color: #badbcc;
+    color: #0f5132;
+}
+    
+.alert-default {
+    background-color: #e2e3e5;
+    border-color: #d3d6d8;
+    color: #383d41;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .navbar {
+    backdrop-filter: blur(5px);
+  }
+  
+  .card {
+    margin-bottom: 1rem;
+  }
+}
+.muted-text {
+  color: var(--text-muted);
+}

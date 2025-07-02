@@ -1,0 +1,354 @@
+<!--
+  - Copyright (C) 2025 StarsX Studio
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+{% extends "base.html" %}
+
+{% block title %}服务状态监控 - StarsX{% endblock %}
+
+{% block head %}
+<style>
+.status-container {
+  padding: 2rem 0;
+}
+
+.service-card {
+  height: 100%;
+}
+
+.service-icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  color: var(--primary-blue);
+}
+
+.status-badge {
+  font-size: 0.85rem;
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+}
+
+.status-online {
+  background: rgba(40, 167, 69, 0.15);
+  color: #28a745;
+  border: 1px solid rgba(40, 167, 69, 0.3);
+}
+
+.status-offline {
+  background: rgba(220, 53, 69, 0.15);
+  color: #dc3545;
+  border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+.status-warning {
+  background: rgba(255, 193, 7, 0.15);
+  color: #ffc107;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+.status-history {
+  margin-top: 2rem;
+}
+
+.history-header {
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-chart {
+  display: flex;
+  height: 200px;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.day-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+.day-bar {
+  width: 100%;
+  background: var(--chart-green);
+  border-radius: 4px 4px 0 0;
+  transition: height 0.5s ease;
+  position: relative;
+}
+
+.day-bar:hover {
+  opacity: 0.9;
+  transform: scale(1.05);
+}
+
+.day-label {
+  margin-top: 8px;
+  font-size: 0.7rem;
+  color: var(--text-dark);
+}
+
+.day-percent {
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 2px 6px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  color: var(--text-dark);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.day-bar:hover .day-percent {
+  opacity: 1;
+}
+.event-card-container {
+  margin-top: 3rem;
+}
+
+.event-header {
+  margin-bottom: 1.5rem;
+}
+
+.event-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.event-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  border-left: 4px solid var(--primary-blue);
+}
+
+.event-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+}
+
+.event-card.critical {
+  border-left-color: #dc3545;
+}
+.event-card.medium {
+  border-left-color: #ffc107;
+}
+
+.event-card.minor {
+  border-left-color: #17a2b8;
+}
+
+.event-card-header {
+  padding: 1rem;
+  background: rgba(248, 249, 250, 0.9);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.event-card-body {
+  padding: 1.5rem;
+}
+
+.event-date {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.event-content {
+  display: flex;
+  align-items: center;
+}
+
+.event-badge {
+  display: inline-block;
+  padding: 0.3rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  margin-right: 1rem;
+  min-width: 80px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.badge-critical {
+  background: rgba(220, 53, 69, 0.15);
+  color: #dc3545;
+  border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+.badge-medium {
+  background: rgba(255, 193, 7, 0.15);
+  color: #ffc107;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.badge-minor {
+  background: rgba(23, 162, 184, 0.15);
+  color: #17a2b8;
+  border: 1px solid rgba(23, 162, 184, 0.3);
+}
+@media (max-width: 768px) {
+  .navbar {
+    backdrop-filter: blur(5px);
+  }
+  
+  .card {
+    margin-bottom: 1.5rem;
+  }
+  
+  .history-chart {
+    overflow-x: auto;
+    padding-bottom: 1rem;
+  }
+  
+  .day-column {
+    min-width: 20px;
+  }
+  
+  .event-cards {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="status-container">
+  <div class="text-center mb-5">
+    <h2 class="neon-text mb-3">服务状态监控</h2>
+    <p class="muted-text">实时监控所有服务的运行状态和可用性</p>
+    <div class="d-flex justify-content-center align-items-center">
+      <div class="spinner-border text-primary me-2" id="loading-spinner"></div>
+      <small class="muted-text" id="last-updated">最后更新: 正在加载...</small>
+    </div>
+  </div>
+<div class="row" id="services-container">
+  {% for service, data in services.items() %}
+  <div class="col-md-4 mb-4">
+    <div class="card service-card glass-effect h-100">
+      <div class="card-body text-center p-4 d-flex flex-column">
+        <div class="service-icon">
+          {% if service == 'mysql' %}
+            <i class="fas fa-database"></i>
+          {% elif service == 'minecraft' %}
+            <i class="fas fa-server"></i>
+          {% else %}
+            <i class="fas fa-globe"></i>
+          {% endif %}
+        </div>
+        <h4 class="mb-3 muted-text">
+          {% if service == 'web' %}网站状态{% elif service == 'minecraft' %}MC服务器{% else %}{{ service | capitalize }}{% endif %}
+        </h4>
+        <span class="status-badge 
+          {% if data.status %}status-online{% else %}status-offline{% endif %} mb-3">
+          {% if data.status %}在线{% else %}离线{% endif %}
+        </span>
+        <div class="service-details text-start small flex-grow-1 muted-text">
+          {% if service == 'web' %}
+            {% for line in data.details.split('<br>') %}
+              <div class="mb-1">
+                <i class="fas fa-circle me-1 {% if '在线' in line %}text-success{% else %}text-danger{% endif %}"></i>
+                {{ line | safe }}
+              </div>
+            {% endfor %}
+          {% elif service == 'minecraft' %}
+            {% for line in data.details.split('<br>') %}
+              <div class="mb-1">{{ line | safe }}</div>
+            {% endfor %}
+          {% else %}
+            <p class="mb-0">{{ data.details | safe }}</p>
+          {% endif %}
+        </div>
+        
+        <p class="mt-auto mb-0 small muted-text">
+          <i class="fas fa-clock me-1"></i>{{ data.timestamp.strftime('%Y-%m-%d %H:%M') }}
+        </p>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+  <div class="status-history">
+    <div class="history-header">
+      <h4 class="neon-purple">30天服务可用率</h4>
+      <div>
+        <button id="refresh-history" class="btn btn-sm btn-outline-info me-2">
+          <i class="fas fa-sync-alt"></i> 刷新
+        </button>
+        <span class="badge bg-primary me-2">MySQL</span>
+        <span class="badge bg-success me-2">Minecraft</span>
+        <span class="badge bg-info">Website</span>
+      </div>
+    </div>
+    
+    <div class="history-chart glass-effect" id="history-chart">
+    </div>
+  </div>
+  <div class="event-card-container">
+    <div class="event-header">
+      <h4 class="neon-purple mb-0">最近事件</h4>
+    </div>
+    
+    <div class="event-cards" id="events-container">
+      {% for event in events %}
+      <div class="event-card glass-effect {{ event.level }}">
+        <div class="event-card-header">
+          <div class="event-date">
+            <i class="fas fa-clock me-2"></i>{{ event.created_at.strftime('%Y年%m月%d日 %H:%M') }}
+          </div>
+        </div>
+        <div class="event-card-body">
+          <div class="event-content">
+            <span class="event-badge badge-{{ event.level }}">
+              {% if event.level == 'critical' %}严重
+              {% elif event.level == 'medium' %}中等
+              {% else %}轻微
+              {% endif %}
+            </span>
+            <div>
+              <p class="mb-1">{{ event.description }}</p>
+              <small class="text-primary">由 {{ event.created_by }} 添加</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="col-12">
+        <div class="alert alert-info text-center text-info">
+          没有最近事件
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}
