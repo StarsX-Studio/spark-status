@@ -65,10 +65,10 @@ limiter = Limiter(
 
 # 数据库配置
 DB_CONFIG = {
-    'host': os.getenv('DB_HOST', 'waigame.hqli.cn'),
-    'user': os.getenv('DB_USER', 'status'),
-    'password': os.getenv('DB_PASSWORD', 'SACP8zAW5x5s886Z'),
-    'database': os.getenv('DB_NAME', 'status'),
+    'host': os.getenv('DB_HOST', ''),
+    'user': os.getenv('DB_USER', ''),
+    'password': os.getenv('DB_PASSWORD', ''),
+    'database': os.getenv('DB_NAME', ''),
     'charset': 'utf8mb4',
     'cursorclass': pymysql.cursors.DictCursor,
     'use_unicode': True
@@ -174,11 +174,11 @@ def init_database():
             initial_users = [
                 {
                     'username': 'xinrain',
-                    'password': os.getenv('ADMIN_PASSWORD_XINRAIN', 'Lcp970920')
+                    'password': os.getenv('ADMIN_PASSWORD_1', '')
                 },
                 {
                     'username': 'xingxuan',
-                    'password': os.getenv('ADMIN_PASSWORD_XINGXUAN', 'waigame_admin_xingxuanpassword')
+                    'password': os.getenv('ADMIN_PASSWORD_2', '')
                 }
             ]
             
@@ -705,8 +705,8 @@ def reset_user_passwords():
     conn = get_db()
     try:
         users = [
-            ('xinrain', os.getenv('ADMIN_PASSWORD_XINRAIN', 'Lcp970920')),
-            ('xingxuan', os.getenv('ADMIN_PASSWORD_XINGXUAN', 'waigame_admin_xingxuanpassword'))
+            ('xinrain', os.getenv('ADMIN_PASSWORD_1', '')),
+            ('xingxuan', os.getenv('ADMIN_PASSWORD_2', ''))
         ]
         with conn.cursor() as cursor:
             for username, password in users:
@@ -726,5 +726,5 @@ def reset_user_passwords():
 
 if __name__ == '__main__': 
     # 启动应用
-    init_database() 
+    #init_database() 
     app.run(host='0.0.0.0', port=5000, debug=False)
