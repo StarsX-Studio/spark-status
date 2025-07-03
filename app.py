@@ -28,14 +28,26 @@ import secrets
 import requests
 import time  # 添加延迟防止暴力破解
 from mcstatus import BedrockServer
-
+from logging.handlers import RotatingFileHandler
+import locale
+locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 # 加载环境变量
 load_dotenv()
 
 # 创建Flask应用
 app = Flask(__name__)
-app.secret_key = os.urandom(24)  # 随机生成安全密钥
-
+app.secret_key = os.urandom(24)
+handler = RotatingFileHandler(
+    'app.log', 
+    maxBytes=1024*1024, 
+    backupCount=5,
+    encoding='utf-8'
+)
+handler.setFormatter(logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+))
+logger = logging.getLogger('StatusMonitor')
+logger.addHandler(handler)
 # 配置日志
 logging.basicConfig(
     level=logging.INFO,
@@ -53,18 +65,24 @@ limiter = Limiter(
 
 # 数据库配置
 DB_CONFIG = {
-    'host': os.getenv('DB_HOST', ''),
-    'user': os.getenv('DB_USER', ''),
-    'password': os.getenv('DB_PASSWORD', ''),
-    'database': os.getenv('DB_NAME', ''),
+    'host': os.getenv('DB_HOST', 'waigame.hqli.cn'),
+    'user': os.getenv('DB_USER', 'status'),
+    'password': os.getenv('DB_PASSWORD', 'SACP8zAW5x5s886Z'),
+    'database': os.getenv('DB_NAME', 'status'),
     'charset': 'utf8mb4',
-    'cursorclass': pymysql.cursors.DictCursor
+    'cursorclass': pymysql.cursors.DictCursor,
+    'use_unicode': True
 }
 @app.context_processor
 def inject_now():
     return {'now': datetime.now()}
 def get_db():
-    return pymysql.connect(**DB_CONFIG)
+    conn = pymysql.connect(**DB_CONFIG)
+    with conn.cursor() as cursor:
+        cursor.execute("SET NAMES utf8mb4")
+        cursor.execute("SET CHARACTER SET utf8mb4")
+        cursor.execute("SET character_set_connection=utf8mb4")
+        return conn
 def generate_salt():
     """生成16字节的随机盐"""
     return secrets.token_hex(16)
@@ -155,12 +173,12 @@ def init_database():
             
             initial_users = [
                 {
-                    'username': '1',
-                    'password': os.getenv('ADMIN_PASSWORD_1', '')
+                    'username': 'xinrain',
+                    'password': os.getenv('ADMIN_PASSWORD_XINRAIN', 'Lcp970920')
                 },
                 {
-                    'username': '2',
-                    'password': os.getenv('ADMIN_PASSWORD_2', '')
+                    'username': 'xingxuan',
+                    'password': os.getenv('ADMIN_PASSWORD_XINGXUAN', 'waigame_admin_xingxuanpassword')
                 }
             ]
             
@@ -687,8 +705,8 @@ def reset_user_passwords():
     conn = get_db()
     try:
         users = [
-            ('xinrain', os.getenv('ADMIN_PASSWORD_1', '')),
-            ('xingxuan', os.getenv('ADMIN_PASSWORD_2', ''))
+            ('xinrain', os.getenv('ADMIN_PASSWORD_XINRAIN', 'Lcp970920')),
+            ('xingxuan', os.getenv('ADMIN_PASSWORD_XINGXUAN', 'waigame_admin_xingxuanpassword'))
         ]
         with conn.cursor() as cursor:
             for username, password in users:
@@ -708,5 +726,5 @@ def reset_user_passwords():
 
 if __name__ == '__main__': 
     # 启动应用
-    #init_database() 第一次启动应用请删除该注释以初始化数据库（需要先配置.env）
+    init_database() 
     app.run(host='0.0.0.0', port=5000, debug=False)
