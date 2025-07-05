@@ -44,7 +44,7 @@ StarsX 服务状态监控（spark-status）是一个实时监控多个服务状�
 
 1. **克隆仓库**
 >>
-git clone https://github.com/StarsXStudio/spark-status.git
+git clone https://github.com/StarsX-Studio/spark-status.git
 cd spark-status
 >>
 
